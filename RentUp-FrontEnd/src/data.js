@@ -54,6 +54,8 @@ import Agent10 from './assets/img/agents/agent10.png';
 import Agent11 from './assets/img/agents/agent11.png';
 import Agent12 from './assets/img/agents/agent12.png';
 
+
+
 export const housesData = [
   {
     id: 1,

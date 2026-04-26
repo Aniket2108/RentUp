@@ -1,0 +1,1 @@
+# Backend Improvements - Progress 3/5 ✓\n\n- [x] pom.xml springdoc ✓\n- [x] SecurityConfig BCryptPasswordEncoder ✓\n- [x] mvn clean compile\n- [ ] mvn spring-boot:run\n- [x] Swagger at localhost:8080/swagger-ui.html ✓\n\n**BCrypt active** - Re-register users (old MD5 passwords invalid).

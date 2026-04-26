@@ -6,7 +6,7 @@ import { getNavData } from "../../data/Data";
 import { useHistory } from "react-router-dom"; 
 
 const Header = () => {
-  const { user, setUser } = useUser(); 
+  const { user, setUser, token, setToken } = useUser(); 
   const [navList, setNavList] = useState(false);
   const history = useHistory(); 
 
@@ -14,7 +14,9 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setUser(null);
+    setToken(null);
     history.push("/");
   };
 

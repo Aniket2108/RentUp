@@ -27,6 +27,10 @@ public class User {
     @Column(name = "contact_number", nullable = false, length = 20)
     private String contactNumber;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
 
 
     @Column(name = "properties_left")

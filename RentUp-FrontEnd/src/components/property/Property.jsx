@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./propertyManagement.css";
-import { getCities, getAreas, serverUrl } from "../data/Data";
+import { getCities, getAreas, serverUrl, api } from "../data/Data";
 import { useUser } from "../common/UserProvider";
 import { getAllProperties } from "../data/Data";
-import axios from "axios";
 
 const PropertyManagement = () => {
   const [flatType, setFlatType] = useState("");
@@ -83,8 +82,8 @@ const PropertyManagement = () => {
           formObj.append('userId',user.userId);
           formObj.append('propertyPhoto',image[0]);
 
-          const addResponse = await axios.post(
-            `${serverUrl}/properties/add`,
+          const addResponse = await api.post(
+            '/properties/add',
             formObj,
             {
               headers: {

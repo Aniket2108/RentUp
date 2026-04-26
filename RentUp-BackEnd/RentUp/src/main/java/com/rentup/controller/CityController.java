@@ -17,7 +17,7 @@ public class CityController {
     @Autowired
     private CityService cityService;
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<?> getAllCities(){
         return ResponseEntity.status(HttpStatus.OK).body(cityService.getAllCities());
     }

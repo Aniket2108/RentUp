@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.rentup.dto.UserDTO;
 import com.rentup.entities.User;
+import com.rentup.request.ChangePasswordRequest;
+import com.rentup.entities.Role;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -21,9 +23,15 @@ public interface UserService {
 
 	Boolean updateSubscription(String mobileNumber,String planType);
 
-	Boolean getUserByMobileNumber(String mobileNumber);
+	UserDTO getUserByMobileNumber(String mobileNumber);
 
-	Boolean changePassword(String mobileNumber,String newPass);
+	String changePassword(String mobileNumber, String newPass);
+
+	String changePassword(ChangePasswordRequest request);
+
+	void deleteUser(Integer userId);
+
+	void updateUserRole(Integer userId, Role role);
 
 	byte[] getProfilePicture(String mobileNumber);
 }

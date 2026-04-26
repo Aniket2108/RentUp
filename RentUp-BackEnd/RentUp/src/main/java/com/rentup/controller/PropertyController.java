@@ -5,12 +5,14 @@ import java.util.List;
 
 import com.rentup.dto.PropertyDTO;
 import com.rentup.dto.UserDTO;
+import com.rentup.entities.PropertyStatus;
 import com.rentup.request.PropertyRequest;
 import com.rentup.services.PropertyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -21,6 +23,7 @@ public class PropertyController {
     @Autowired
     private PropertyService propertyService;
 
+//    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<PropertyDTO>> getAllProperties() {
         List<PropertyDTO> properties = propertyService.getAllProperties();
@@ -59,6 +62,7 @@ public class PropertyController {
         return new ResponseEntity<>(savedProperty, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProperty(@PathVariable Integer id) {
         propertyService.deleteProperty(id);
@@ -78,6 +82,15 @@ public class PropertyController {
             propertyService.updatePropertyStatusToRented(propertyId);
             return new ResponseEntity<>(HttpStatus.OK);
        
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updatePropertyStatus(@PathVariable Integer id, @RequestParam String status) {
+        // Assuming PropertyService has a method to update status
+        // For now, I'll add it
+        propertyService.updatePropertyStatus(id, PropertyStatus.valueOf(status.toUpperCase()));
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping(value = "/image/{propertyId}")

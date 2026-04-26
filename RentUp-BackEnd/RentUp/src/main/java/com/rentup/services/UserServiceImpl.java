@@ -8,11 +8,15 @@ import java.util.List;
 import com.rentup.dto.UserDTO;
 import com.rentup.entities.User;
 import com.rentup.entities.UserProfilePicture;
+import com.rentup.exception.ResourceNotFoundException;
 import com.rentup.repository.UserProfilePictureRepository;
 import com.rentup.repository.UserRepository;
-import com.rentup.security.PasswordEncoder;
+import com.rentup.entities.Role;
+import com.rentup.request.ChangePasswordRequest;
+import com.rentup.strategy.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -50,7 +54,7 @@ public class UserServiceImpl implements UserService {
 		profilePicture1.setUser(user);
 		profilePicture1.setContent(profilePicture.getBytes());
 
-		user.setPassword(passwordEncoder.encodePassword(user.getPassword()));
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
 
 		user.setPropertiesLeft(5);
 		User savedUser = userRepository.save(user);
@@ -72,7 +76,7 @@ public class UserServiceImpl implements UserService {
 	public UserDTO loginUser(String mobileNumber, String password) throws IOException, Exception {
 		User user = userRepository.findByContactNumber(mobileNumber);
 
-		if (user != null && passwordEncoder.verifyPassword(password, user.getPassword())) {
+		if (user != null && passwordEncoder.matches(password, user.getPassword())) {
 			UserDTO returning = mapper.map(user, UserDTO.class);
 //			UserProfilePicture profilePicture = profilePictureRepository.findByUser(user);
 //			returning.setProfilePicture(profilePicture.getContent());
@@ -89,39 +93,45 @@ public class UserServiceImpl implements UserService {
 	}
 
 
-//	@Override
-//    public boolean changePassword(ChangePasswordRequest request) {
-//        // Retrieve the user by userId
-//        User user = userRepository.findByContactNumber(request.getContactNumber());
-//        request.setOldPassword(passwordEncoder.encodePassword(request.getOldPassword()));
-//        request.setNewPassword(passwordEncoder.encodePassword(request.getNewPassword()));
-//        if (user == null) {
-//            // User not found
-//            return false;
-//        }
-//
-//        // Verify the old password
-//        if (!user.getPassword().equals(request.getOldPassword())) {
-//            // Incorrect old password
-//            return false;
-//        }
-//
-//        // Update the user's password with the new one
-//        user.setPassword(request.getNewPassword());
-//        userRepository.save(user);
-//
-//        return true;
-//    }
+	@Override
+    public String changePassword(ChangePasswordRequest request) {
+        // Retrieve the user by userId
+        User user = userRepository.findByContactNumber(request.getContactNumber());
+        if (user == null) {
+            // User not found
+            return "User not found";
+        }
+
+        // Verify the old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            // Incorrect old password
+            return "Incorrect old password";
+        }
+
+        // Validate new password
+        if (request.getNewPassword().equals(request.getOldPassword())) {
+            return "New password cannot be the same as old password";
+        }
+        if (request.getNewPassword().length() < 6) {
+            return "Password must be at least 6 characters long";
+        }
+
+        // Update the user's password with the new one
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return "Password changed successfully";
+    }
 
 	@Override
 	public User findById(Integer userId) {
 
-		return userRepository.findById(userId).orElseThrow();
+		return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
 	}
 
 	@Override
-	public UserDTO updateUser(Integer userId, String userName, String userEmail) throws Exception
-			 {
+	public UserDTO updateUser(Integer userId, String userName, String userEmail) throws Exception {
 		User user = userRepository.findById(userId).orElseThrow();
 
 //		if(user.getEmail().equalsIgnoreCase(userEmail)) {
@@ -178,16 +188,23 @@ public class UserServiceImpl implements UserService {
 	public Boolean updateSubscription(String mobileNumber, String planType) {
 		User userEntity = userRepository.findByContactNumber(mobileNumber);
 		userEntity.setSubscriptionType(planType.toUpperCase());
+
+		SubscriptionContext context = new SubscriptionContext();
+		SubscriptionStrategy strategy;
 		if (planType.equalsIgnoreCase("silver")) {
-			userEntity.setPropertiesLeft(15);
+			strategy = new SilverStrategy();
 		} else if (planType.equalsIgnoreCase("gold")) {
-			userEntity.setPropertiesLeft(35);
+			strategy = new GoldStrategy();
 		} else {
-			userEntity.setPropertiesLeft(Integer.MAX_VALUE);
+			strategy = new PlatinumStrategy();
 		}
+		context.setStrategy(strategy);
+
+		userEntity.setPropertiesLeft(context.getPropertiesLeft());
+
 		LocalDate startDate = LocalDate.now();
 		Date sqlStartDate = Date.valueOf(startDate);
-		Date sqlEndDate = Date.valueOf(startDate.plusMonths(1));
+		Date sqlEndDate = Date.valueOf(context.getEndDate(startDate));
 		userEntity.setSubscriptionStartDate(sqlStartDate);
 		userEntity.setSubscriptionEndDate(sqlEndDate);
 		userRepository.save(userEntity);
@@ -195,23 +212,41 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public Boolean getUserByMobileNumber(String mobileNumber) {
+	public UserDTO getUserByMobileNumber(String mobileNumber) {
 		User user = userRepository.findByContactNumber(mobileNumber);
-
 		if(user == null){
-			return false;
+			return null;
 		}
-		return true;
+		return mapper.map(user, UserDTO.class);
 	}
 
 	@Override
-	public Boolean changePassword(String mobileNumber, String newPass) {
+	public String changePassword(String mobileNumber, String newPass) {
 		User userEntity = userRepository.findByContactNumber(mobileNumber);
-		userEntity.setPassword(passwordEncoder.encodePassword(newPass));
+		if (userEntity == null) {
+			return "User not found";
+		}
+		if (newPass.length() < 6) {
+			return "Password must be at least 6 characters long";
+		}
+		userEntity.setPassword(passwordEncoder.encode(newPass));
 		userRepository.save(userEntity);
-		return true;
+		return "Password updated successfully";
 	}
 
 
+
+	@Override
+	public void deleteUser(Integer userId) {
+		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+		userRepository.delete(user);
+	}
+
+	@Override
+	public void updateUserRole(Integer userId, Role role) {
+		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+		user.setRole(role);
+		userRepository.save(user);
+	}
 
 }

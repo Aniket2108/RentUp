@@ -31,8 +31,11 @@ public class AreaServiceImpl implements AreaService{
 
     @Override
     public List<String> getAreaByCityName(String cityName) {
-        City city = cityRepo.findByCityName(cityName);
+        System.out.println("inputCity"+cityName);
+        City city = cityRepo.findByCityNameIgnoreCase(cityName);
+        System.out.println("City"+city);
         List<Area> areasEntity = areaRepo.findByCity(city);
+        System.out.println("area"+areasEntity);
         List<String> areaNames = areasEntity.stream()
                 .map(Area::getAreaName).collect(Collectors.toList());
         return areaNames;

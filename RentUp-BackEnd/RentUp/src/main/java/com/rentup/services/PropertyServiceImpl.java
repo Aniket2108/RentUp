@@ -128,6 +128,15 @@ public class PropertyServiceImpl implements PropertyService {
 	    }
 
     @Override
+    public void updatePropertyStatus(Integer propertyId, PropertyStatus status) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found with id: " + propertyId));
+
+        property.setStatus(status);
+        propertyRepository.save(property);
+    }
+
+    @Override
     public byte[] getPropertyPicture(Integer propertyId) {
         Optional<Property> property = propertyRepository.findById(propertyId);
         PropertyPicture propertyPicture = propertyPictureRepository.findByProperty(property);

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "../common/UserProvider";
 import axios from "axios";
 import "./Profile.css"; 
-import { serverUrl } from "../data/Data";
+import { serverUrl, api } from "../data/Data";
 
 const Profile = () => {
   const { user, setUser } = useUser();
@@ -13,6 +13,13 @@ const Profile = () => {
     userProfilePicture: user.userProfilePicture,
   });
   const [editMode, setEditMode] = useState(false);
+  const [changePasswordMode, setChangePasswordMode] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordErrors, setPasswordErrors] = useState({});
 
   const [userProfilePictureRender, setUserProfilePicture] = useState(null);
  
@@ -22,7 +29,7 @@ const Profile = () => {
     const fetchProfilePicture = async () => {
       if (user !== null) {
         try {
-          const response1 = await axios.get(`${serverUrl}/users/profile/${user.contactNumber}`, {
+          const response1 = await api.get(`/users/profile/${user.contactNumber}`, {
             responseType: 'arraybuffer',
           });
   
@@ -48,24 +55,56 @@ const Profile = () => {
 
 
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({
+      ...passwordData,
+      [name]: value,
+    });
+  };
+
+  const validatePasswordForm = () => {
+    const errors = {};
+    if (!passwordData.oldPassword) {
+      errors.oldPassword = "Old password is required";
+    }
+    if (passwordData.newPassword.length < 6) {
+      errors.newPassword = "New password must be at least 6 characters";
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+    setPasswordErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (validatePasswordForm()) {
+      try {
+        const response = await api.post('/users/change-password', {
+          contactNumber: user.contactNumber,
+          oldPassword: passwordData.oldPassword,
+          newPassword: passwordData.newPassword
+        });
+        alert(response.data || "Password changed successfully");
+        setChangePasswordMode(false);
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      } catch (error) {
+        alert("Failed to change password: " + (error.response?.data || "Unknown error"));
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(
-        `${serverUrl}/users/${user.userId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data", 
-          },
-        }
-      );
+      const response = await api.put(`/users/${user.userId}?userName=${formData.userName}&userEmail=${formData.userEmail}`);
       setUser(response.data);
       setEditMode(false);
-      alert("Profile updated successfully!");
+      alert("Profile updated successfully");
     } catch (error) {
-      console.error("Failed to update profile:", error);
-      alert("Failed to update profile. Please try again.");
+      alert("Failed to update profile: " + (error.response?.data || "Unknown error"));
     }
   };
 
@@ -106,6 +145,56 @@ const Profile = () => {
             </button>
           </div>
         </form>
+      ) : changePasswordMode ? (
+        <form onSubmit={handlePasswordSubmit} className="profile-form">
+          <h3>Change Password</h3>
+          <div className="form-group">
+            <label htmlFor="oldPassword">Old Password:</label>
+            <input
+              type="password"
+              id="oldPassword"
+              name="oldPassword"
+              value={passwordData.oldPassword}
+              onChange={handlePasswordChange}
+              required
+            />
+            {passwordErrors.oldPassword && <div className="error-message">{passwordErrors.oldPassword}</div>}
+          </div>
+          <div className="form-group">
+            <label htmlFor="newPassword">New Password:</label>
+            <input
+              type="password"
+              id="newPassword"
+              name="newPassword"
+              value={passwordData.newPassword}
+              onChange={handlePasswordChange}
+              required
+            />
+            {passwordErrors.newPassword && <div className="error-message">{passwordErrors.newPassword}</div>}
+          </div>
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm New Password:</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={passwordData.confirmPassword}
+              onChange={handlePasswordChange}
+              required
+            />
+            {passwordErrors.confirmPassword && <div className="error-message">{passwordErrors.confirmPassword}</div>}
+          </div>
+          <div className="button-group">
+            <button type="submit" className="save-btn">Change Password</button>
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => setChangePasswordMode(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       ) : (
         <div className="profile-pic-container">
         <div className="profile-info">
@@ -122,6 +211,9 @@ const Profile = () => {
           <p>Properties Left: {user.propertiesLeft>2000000? 'Unlimited' : user.propertiesLeft}</p>
           <button onClick={() => setEditMode(true)} className="edit-btn">
             Edit
+          </button>
+          <button onClick={() => setChangePasswordMode(true)} className="edit-btn" style={{ marginLeft: '10px' }}>
+            Change Password
           </button>
         </div>
         <div>

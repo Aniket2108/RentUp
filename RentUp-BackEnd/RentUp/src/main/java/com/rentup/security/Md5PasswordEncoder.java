@@ -3,12 +3,23 @@ package com.rentup.security;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 
 
 @Component
-public class PasswordEncoder {
+public class Md5PasswordEncoder implements org.springframework.security.crypto.password.PasswordEncoder {
+
+    @Override
+    public String encode(CharSequence rawPassword) {
+        return encodePassword(rawPassword.toString());
+    }
+
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        return verifyPassword(rawPassword.toString(), encodedPassword);
+    }
 
     public String encodePassword(String password) {
         try {

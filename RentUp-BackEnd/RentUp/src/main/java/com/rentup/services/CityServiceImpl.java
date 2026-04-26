@@ -20,7 +20,7 @@ public class CityServiceImpl implements CityService{
     public List<String> getAllCities() {
         List<City> citiesEntity = cityRepo.findAll();
         List<String> cityNames = citiesEntity.stream()
-                .map(City::getCityName).collect(Collectors.toList());
+                .map(city -> city.getCityName()).collect(Collectors.toList());
         return cityNames;
     }
 

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Link, useHistory } from "react-router-dom";
 import { useUser } from "../common/UserProvider";
 import "./ListedProperty.css";
-import { serverUrl } from "../data/Data";
+import { serverUrl, api } from "../data/Data";
 
 const ListedProperty = () => {
   const { user } = useUser();
@@ -15,15 +14,15 @@ const ListedProperty = () => {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await axios.get(
-          `${serverUrl}/properties/users/${user.userId}`
+        const response = await api.get(
+          `/properties/users/${user.userId}`
         );
         setProperties(response.data);
 
         const imagePromises = response.data.map(async (property) => {
           try {
-            const response1 = await axios.get(
-              `${serverUrl}/properties/image/${property.propertyId}`,
+            const response1 = await api.get(
+              `/properties/image/${property.propertyId}`,
               {
                 responseType: "arraybuffer",
               }

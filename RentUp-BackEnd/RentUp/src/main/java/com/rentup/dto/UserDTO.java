@@ -2,6 +2,7 @@ package com.rentup.dto;
 
 import java.sql.Date;
 
+import com.rentup.entities.Role;
 import lombok.Data;
 
 @Data
@@ -15,6 +16,7 @@ public class UserDTO {
     private String subscriptionType;
     private Date subscriptionEndDate;
     private byte[] profilePicture;
+    private Role role;
 
 }
 

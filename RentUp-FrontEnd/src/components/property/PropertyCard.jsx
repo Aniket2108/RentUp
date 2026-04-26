@@ -3,7 +3,7 @@ import "../property/PropertyCard.css";
 import { useUser } from "../common/UserProvider";
 import { useHistory } from "react-router-dom";
 import axios from "axios";
-import { serverUrl } from "../data/Data";
+import { serverUrl, api } from "../data/Data";
 
 const PropertyCard = ({ property, image }) => {
   const { user, setUser } = useUser();
@@ -69,8 +69,8 @@ const PropertyCard = ({ property, image }) => {
       visitDate: selectedDate,
     };
 
-    const response = await axios.post(
-      `${serverUrl}/visit/schedule`,
+    const response = await api.post(
+      '/visit/schedule',
       visitReq
     );
     setUser(response.data);

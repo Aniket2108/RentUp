@@ -1,8 +1,7 @@
 import React from "react";
-import { price, serverUrl } from "../../data/Data";
+import { price, serverUrl, api } from "../../data/Data";
 import { useUser } from "../../common/UserProvider"; 
 import { useHistory } from "react-router-dom";
-import axios from "axios";
 
 const PriceCard = () => {
   const user = useUser();
@@ -41,7 +40,7 @@ const PriceCard = () => {
             rzp.close();
 
             try{
-              const response =  axios.put(`${serverUrl}/users/subscription/${user.user.contactNumber}/${plan}`)
+              const response =  api.put(`/users/subscription/${user.user.contactNumber}/${plan}`)
               // console.log(`http://localhost:8080/users/subscription/${user.user.contactNumber}/${plan}`);
             }
             catch(error){

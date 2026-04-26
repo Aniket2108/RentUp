@@ -52,7 +52,7 @@ const ChangePass = () => {
           }, 3000);
       } catch (error) {
         if (error.response) {
-          setBackendError("Invalid Entry");
+          setBackendError(error.response.data || "Invalid Entry");
         } else if (error.request) {
           setBackendError(
             "Error: Unable to connect to the server. Please try again later."

@@ -1,37 +1,44 @@
-// export const nav = [
-//   {
-//     text: "home",
-//     path: "/",
-//   },
-//   {
-//     text: "about",
-//     path: "/about",
-//   },
-//   {
-//     text: "services",
-//     path: "/services",
-//   },
-//   {
-//     text: "blog",
-//     path: "/blog",
-//   },
-//   {
-//     text: "pricing",
-//     path: "/pricing",
-//   },
-//   {
-//     text: "contact",
-//     path: "/contact",
-//   },
-    
-// ]
+import React from "react";
+import axios from "axios";
 
-import  axios   from "axios";
-export const serverUrl = "http://51.21.67.53:8080";
+export const serverUrl = "http://localhost:8080";
+
+// Create axios instance with token interceptor
+export const api = axios.create({
+  baseURL: serverUrl,
+});
+
+// Request interceptor to add token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle 401
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token invalid, logout
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const getCities = async () => {
   try {
-    const response = await axios.get(`${serverUrl}/city/`); // Update the API endpoint
+    const response = await axios.get(`${serverUrl}/city`);
     return response.data;
   } catch (error) {
     console.error("Error fetching cities:", error);
@@ -41,37 +48,33 @@ export const getCities = async () => {
 
 export const getNavData = (user) => {
   const navData = [
-      {
-    text: "home",
-    path: "/",
-  },
-  {
-    text: "about",
-    path: "/about",
-  },
-  // {
-  //   text: "services",
-  //   path: "/services",
-  // },
-  // {
-  //   text: "blog",
-  //   path: "/blog",
-  // },
-  {
-    text: "contact",
-    path: "/contact",
-  },
-  {
-    text: "add property",
-    path: "/property",
-  },
-    // Your other navigation items here
+    {
+      text: "home",
+      path: "/",
+    },
+    {
+      text: "about",
+      path: "/about",
+    },
+    {
+      text: "contact",
+      path: "/contact",
+    },
+    {
+      text: "add property",
+      path: "/property",
+    },
     { text: user ? 'Logout' : 'Login', path: user? '/logout':'/login'},
     { text:user? 'Profile':'Sign up', path: user?'/profile':'/signup' },
   ];
 
+  if (user && user.role === 'ADMIN') {
+    navData.splice(navData.length - 2, 0, { text: 'Admin', path: '/admin' });
+  }
+
   return navData;
 };
+
 export const featured = [
   {
     cover: "../images/hero/h1.png",
@@ -98,7 +101,8 @@ export const featured = [
     name: "Villa & Condo",
     total: "80 Property",
   },
-]
+];
+
 export const list = [
   {
     id: 1,
@@ -154,29 +158,31 @@ export const list = [
     price: "$2,742",
     type: "Apartment",
   },
-]
+];
+
 export const awards = [
   {
-    icon: <i class='fa-solid fa-trophy'></i>,
-    num: "32 M	",
+    icon: <i className="fa-solid fa-trophy" />,
+    num: "32 M ",
     name: "Blue Burmin Award",
   },
   {
-    icon: <i class='fa-solid fa-briefcase'></i>,
+    icon: <i className="fa-solid fa-briefcase" />,
     num: "43 M",
     name: "Mimo X11 Award",
   },
   {
-    icon: <i class='fa-solid fa-lightbulb'></i>,
+    icon: <i className="fa-solid fa-lightbulb" />,
     num: "51 M",
     name: "Australian UGC Award",
   },
   {
-    icon: <i class='fa-solid fa-heart'></i>,
+    icon: <i className="fa-solid fa-heart" />,
     num: "42 M",
     name: "IITCA Green Award",
   },
-]
+];
+
 export const location = [
   {
     id: 1,
@@ -226,51 +232,53 @@ export const location = [
     Offices: "07 Offices",
     cover: "./images/location/city-6.png",
   },
-]
+];
+
 export const team = [
   {
     list: "50",
     cover: "../images/customer/team-1.jpg",
     address: "Liverpool, Canada",
     name: "Sargam S. Singh",
-    icon: [<i class='fa-brands fa-facebook-f'></i>, <i class='fa-brands fa-linkedin'></i>, <i class='fa-brands fa-twitter'></i>, <i class='fa-brands fa-instagram'></i>],
+    icon: [<i className="fa-brands fa-facebook-f" />, <i className="fa-brands fa-linkedin" />, <i className="fa-brands fa-twitter" />, <i className="fa-brands fa-instagram" />],
   },
   {
     list: "70",
     cover: "../images/customer/team-2.jpg",
     address: "Montreal, Canada",
     name: "Harijeet M. Siller",
-    icon: [<i class='fa-brands fa-facebook-f'></i>, <i class='fa-brands fa-linkedin'></i>, <i class='fa-brands fa-twitter'></i>, <i class='fa-brands fa-instagram'></i>],
+    icon: [<i className="fa-brands fa-facebook-f" />, <i className="fa-brands fa-linkedin" />, <i className="fa-brands fa-twitter" />, <i className="fa-brands fa-instagram" />],
   },
   {
     list: "80",
     cover: "../images/customer/team-3.jpg",
     address: "Denever, USA",
     name: "Anna K. Young",
-    icon: [<i class='fa-brands fa-facebook-f'></i>, <i class='fa-brands fa-linkedin'></i>, <i class='fa-brands fa-twitter'></i>, <i class='fa-brands fa-instagram'></i>],
+    icon: [<i className="fa-brands fa-facebook-f" />, <i className="fa-brands fa-linkedin" />, <i className="fa-brands fa-twitter" />, <i className="fa-brands fa-instagram" />],
   },
   {
     list: "51",
     cover: "../images/customer/team-4.jpg",
     address: "2272 Briarwood Drive",
     name: "Michael P. Grimaldo",
-    icon: [<i class='fa-brands fa-facebook-f'></i>, <i class='fa-brands fa-linkedin'></i>, <i class='fa-brands fa-twitter'></i>, <i class='fa-brands fa-instagram'></i>],
+    icon: [<i className="fa-brands fa-facebook-f" />, <i className="fa-brands fa-linkedin" />, <i className="fa-brands fa-twitter" />, <i className="fa-brands fa-instagram" />],
   },
   {
     list: "42",
     cover: "../images/customer/team-5.jpg",
     address: "2272 Briarwood Drive",
     name: "Michael P. Grimaldo",
-    icon: [<i class='fa-brands fa-facebook-f'></i>, <i class='fa-brands fa-linkedin'></i>, <i class='fa-brands fa-twitter'></i>, <i class='fa-brands fa-instagram'></i>],
+    icon: [<i className="fa-brands fa-facebook-f" />, <i className="fa-brands fa-linkedin" />, <i className="fa-brands fa-twitter" />, <i className="fa-brands fa-instagram" />],
   },
   {
     list: "38",
     cover: "../images/customer/team-5.jpg",
     address: "Montreal, USA",
     name: "Adam K. Jollio",
-    icon: [<i class='fa-brands fa-facebook-f'></i>, <i class='fa-brands fa-linkedin'></i>, <i class='fa-brands fa-twitter'></i>, <i class='fa-brands fa-instagram'></i>],
+    icon: [<i className="fa-brands fa-facebook-f" />, <i className="fa-brands fa-linkedin" />, <i className="fa-brands fa-twitter" />, <i className="fa-brands fa-instagram" />],
   },
-]
+];
+
 export const price = [
   {
     plan: "Silver",
@@ -278,19 +286,19 @@ export const price = [
     ptext: "per month",
     list: [
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "Login from 2 Devices",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "Add Free Experience",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "1 month customer support for rented property",
       },
-      { change: "color", icon: <i class='fa-solid fa-x'></i>, text: "List Unlimited Properties in a month" },
-      { change: "color", icon: <i class='fa-solid fa-x'></i>, text: "Contact Unlimited Brokers" },
+      { change: "color", icon: <i className="fa-solid fa-x" />, text: "List Unlimited Properties in a month" },
+      { change: "color", icon: <i className="fa-solid fa-x" />, text: "Contact Unlimited Brokers" },
     ],
   },
   {
@@ -300,24 +308,24 @@ export const price = [
     ptext: "per month",
     list: [
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "Login from 4 Devices",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "Add Free Experience",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "2 month customer support for rented property",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "List Unlimited Properties in a month",
       },
       {
         change: "color",
-        icon: <i class='fa-solid fa-x'></i>,
+        icon: <i className="fa-solid fa-x" />,
         text: "Contact Unlimited Brokers",
       },
     ],
@@ -328,42 +336,28 @@ export const price = [
     ptext: "per month",
     list: [
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "Login from 8 Devices",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "Add Free Experience",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "List Unlimited Properties in a month",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "1 month customer support for rented property",
       },
       {
-        icon: <i class='fa-solid fa-check'></i>,
+        icon: <i className="fa-solid fa-check" />,
         text: "Contact Unlimited Brokers",
       },
     ],
   },
-]
-// export const footer = [
-//   {
-//     title: "LAYOUTS",
-//     text: [{ list: "Home Page" }, { list: "About Page" }, { list: "Service Page" }, { list: "Property Page" }, { list: "Contact Page" }, { list: "Single Blog" }],
-//   },
-//   {
-//     title: "ALL SECTIONS",
-//     text: [{ list: "Headers" }, { list: "Features" }, { list: "Attractive" }, { list: "Testimonials" }, { list: "Videos" }, { list: "Footers" }],
-//   },
-//   {
-//     title: "COMPANY",
-//     text: [{ list: "About" }, { list: "Blog" }, { list: "Pricing" }, { list: "Affiliate" }, { list: "Login" }, { list: "Changelog" }],
-//   },
-// ]
+];
 
 export const footer = [
   {
@@ -384,10 +378,7 @@ export const socialMediaLinks = [
   { platform: "Facebook", link: "https://www.facebook.com/yourpage" },
   { platform: "Twitter", link: "https://twitter.com/yourpage" },
   { platform: "Instagram", link: "https://www.instagram.com/yourpage" },
-  // Add more social media platforms and their links as needed
 ];
-
-// add to Data.js for ABOUT
 
 export const teamMembers = [
   {
@@ -406,7 +397,7 @@ export const teamMembers = [
     name: "Akash Gholve",
     prn: "230940120063",
     college: "CDAC ACTS",
-    profilePicture: "src\components\images\customer\Akash.jpg",
+    profilePicture: "src/components/images/customer/Akash.jpg",
   },
   {
     name: "Rohan Auti",
@@ -420,19 +411,17 @@ export const teamMembers = [
     college: "CDAC ACTS",
     profilePicture: "../images/customer/Aniket.jpg",
   },
-  // Add details of other team members as needed
 ];
-  
-  export const getAreas = async (city) => {
+
+export const getAreas = async (city) => {
   try {
-    const response = await axios.get(`${serverUrl}/area/${city}`); // Update the API endpoint for areas
+    const response = await axios.get(`${serverUrl}/area/${city}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching areas for ${city}:`, error);
     return [];
   }
 };
-
 
 export const getAllProperties = async () => {
   try {
@@ -443,8 +432,3 @@ export const getAllProperties = async () => {
     return [];
   }
 };
-  
-
-
-
-

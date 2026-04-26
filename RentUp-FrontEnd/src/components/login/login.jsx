@@ -6,7 +6,7 @@ import { useUser } from "../common/UserProvider"; // Import useUser hook from co
 import { serverUrl } from "../data/Data";
 
 const Login = () => {
-  const { setUser,user } = useUser(); 
+  const { setUser, setToken } = useUser(); 
   const [formData, setFormData] = useState({
     mobileNumber: "",
     password: "",
@@ -46,8 +46,10 @@ const Login = () => {
           `${serverUrl}/users/login`,
           formData
         );
-        setUser(response.data); 
-        localStorage.setItem("user", JSON.stringify(response.data));
+        setUser(response.data.user); 
+        setToken(response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("token", response.data.token);
         setShowButtons(false); 
         history.push("/");
       } catch (error) {

@@ -1,21 +1,33 @@
 package com.rentup.controller;
 
 import java.io.IOException;
-
+import java.util.HashMap;
+import java.util.Map;
+import com.rentup.security.JwtUtil;
 import com.rentup.dto.UserDTO;
 import com.rentup.repository.UserRepository;
+import com.rentup.request.ChangePasswordRequest;
 import com.rentup.request.UserLoginRequest;
 import com.rentup.services.UserService;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 
 
 
@@ -28,10 +40,15 @@ public class UserController {
 	private UserService userService;
 	@Autowired
 	private UserRepository repo ;
+	@Autowired
+	private JwtUtil jwtUtil;
+	@Autowired
+	private AuthenticationManager authenticationManager;
 	
 
 	
 
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/all")
 	public ResponseEntity<?> getAllUsers(){
 		return ResponseEntity.ok(userService.getAllUsers()) ;
@@ -63,12 +80,17 @@ public class UserController {
 
 	@PostMapping(value = "/login")
 	public ResponseEntity<?> loginUser(@RequestBody UserLoginRequest loginRequest) throws IOException, Exception {
-		UserDTO user = userService.loginUser(loginRequest.getMobileNumber(), loginRequest.getPassword());
-//		System.out.println(user);
-		if (user != null) {
-//			System.out.println(user);
-			return ResponseEntity.ok(user);
-		} else {
+		try {
+			Authentication authentication = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(loginRequest.getMobileNumber(), loginRequest.getPassword())
+			);
+			UserDTO user = userService.getUserByMobileNumber(loginRequest.getMobileNumber());
+			String token = jwtUtil.generateToken(user.getContactNumber());
+			Map<String, Object> response = new HashMap<>();
+			response.put("token", token);
+			response.put("user", user);
+			return ResponseEntity.ok(response);
+		} catch (AuthenticationException e) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 		}
 	}
@@ -133,8 +155,41 @@ public class UserController {
 	
 	@PutMapping("/{mobileNumber}/{newPass}")
 	public ResponseEntity<?> updatePassWord(@PathVariable String mobileNumber,@PathVariable String newPass){
-		return ResponseEntity.status(HttpStatus.OK).body(userService.changePassword(mobileNumber,newPass));
+		String message = userService.changePassword(mobileNumber,newPass);
+		if (message.equals("Password updated successfully")) {
+			return ResponseEntity.ok(message);
+		} else {
+			return ResponseEntity.badRequest().body(message);
+		}
 	}
 
+	@PostMapping("/change-password")
+	public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+		String message = userService.changePassword(request);
+		if (message.equals("Password changed successfully")) {
+			return ResponseEntity.ok(message);
+		} else {
+			return ResponseEntity.badRequest().body(message);
+		}
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@DeleteMapping("/{userId}")
+	public ResponseEntity<?> deleteUser(@PathVariable Integer userId) {
+		userService.deleteUser(userId);
+		return ResponseEntity.ok("User deleted successfully");
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@PutMapping("/role/{userId}")
+	public ResponseEntity<?> updateUserRole(@PathVariable Integer userId, @RequestParam String role) {
+		try {
+			com.rentup.entities.Role userRole = com.rentup.entities.Role.valueOf(role.toUpperCase());
+			userService.updateUserRole(userId, userRole);
+			return ResponseEntity.ok("User role updated successfully");
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body("Invalid role");
+		}
+	}
 
 }

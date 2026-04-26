@@ -16,7 +16,7 @@ public class AreaController {
     private AreaService areaService;
 
 
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<?> getAllAreas(){
         return ResponseEntity.status(HttpStatus.OK).body(areaService.getAllAreas());
     }

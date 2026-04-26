@@ -1,6 +1,7 @@
 package com.rentup.services;
 
 import com.rentup.dto.PropertyDTO;
+import com.rentup.entities.PropertyStatus;
 import com.rentup.request.PropertyRequest;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ public interface PropertyService {
     PropertyDTO addProperty(PropertyRequest propertyRequest, MultipartFile image) throws IOException;
     public List<PropertyDTO> getPropertiesByUserId(Integer userId);
     void updatePropertyStatusToRented(Integer propertyId);
+    void updatePropertyStatus(Integer propertyId, PropertyStatus status);
 
     byte[] getPropertyPicture(Integer propertyId);
 }
